@@ -1,0 +1,16 @@
+{
+  "name": "advancebackend",
+  "version": "1.0.0",
+  "description": "Learing advance backend ",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "javascript",
+    "advance",
+    "backend"
+  ],
+  "author": "Taha Bilal",
+  "license": "ISC"
+}
