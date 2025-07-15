@@ -1,5 +1,6 @@
 import { createUser } from "../services/userServices.js";
 import { ApiResponse } from "../utils/apiResponse.js";
+import asyncHandler from "../utils/asyncHandler.js";
 
 export const get = async (req, res) => {
   const user = await getUserService();
@@ -13,12 +14,11 @@ export const get = async (req, res) => {
 
 export const registerUser = asyncHandler(async (req, res) => {
   const { fullName, email, username, password } = req.body;
-  const avatarLocalPath = req.files?.avatar[0]?.path;
-  const coverImageLocalPath = req.files?.coveImage[0]?.path;
 
-  if (!avatarLocalPath) {
-    throw new ApiError(400, "Avatar file is required");
-  }
+  const avatarLocalPath = req.files?.avatar?.[0]?.path;
+  const coverImageLocalPath = req.files?.coverImage?.[0]?.path;
+
+  console.log("taha 1", { avatarLocalPath, coverImageLocalPath });
 
   const userData = {
     fullName,
@@ -30,11 +30,6 @@ export const registerUser = asyncHandler(async (req, res) => {
   };
 
   const user = await createUser(userData);
-
-  // Optionally: Upload to cloud storage here if needed
-  // const avatarUrl = await uploadOnCloudinary(avatarLocalPath);
-  // user.avatar = avatarUrl;
-  // await user.save();
 
   res
     .status(201)

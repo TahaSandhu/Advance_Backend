@@ -1,20 +1,16 @@
 import { Router } from "express";
-import { get, registerUser } from "../controllers/userController.js";
+import { registerUser, get } from "../controllers/userController.js";
+import { upload } from "../middlewares/uploadImageMiddle.js";
 
 const router = Router();
 
 router.get("/users", get);
-// router.post("/registration", registerUser);
-router.route("/registration").post(
-  uploadOnCloudinary.file([
-    {
-      name: "avatar",
-      maxCount: 1,
-    },
-    {
-      name: "coverImage",
-      maxCount: 1,
-    },
+
+router.post(
+  "/registration",
+  upload.fields([
+    { name: "avatar", maxCount: 1 },
+    { name: "coverImage", maxCount: 1 },
   ]),
   registerUser
 );

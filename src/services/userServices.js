@@ -5,15 +5,15 @@ import {
   findById,
 } from "../repositories/userRepository.js";
 import ApiError from "../utils/apiErrors.js";
-import asyncHandler from "../utils/asyncHandler.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import path from "path";
 
 export const getUserService = async () => {
   const users = await getUsers();
   return users;
 };
 
-export const createUser = asyncHandler(async (userData) => {
+export const createUser = async (userData) => {
   const { fullName, email, username, password, avatar, coverImage } = userData;
 
   if (
@@ -34,16 +34,18 @@ export const createUser = asyncHandler(async (userData) => {
     }
   }
 
-  if (!avatar) {
-    throw new ApiError(400, "avatar required");
-  }
+  const normalizedAvatarPath = path.resolve(avatar);
+  const normalizedCoverImagePath = path.resolve(coverImage);
 
-  const avatarImageUploaded = await uploadOnCloudinary(avatar);
-  const coverImageUploaded = await uploadOnCloudinary(coverImage);
+  const avatarImageUploaded = await uploadOnCloudinary(normalizedAvatarPath);
+  const coverImageUploaded = await uploadOnCloudinary(normalizedCoverImagePath);
+
+  console.log("tService", { avatarImageUploaded, coverImageUploaded });
 
   if (!avatarImageUploaded) {
     throw new ApiError(400, "avatar required");
   }
+
   const createdUser = await createUserRepo({
     fullName,
     email,
@@ -53,11 +55,11 @@ export const createUser = asyncHandler(async (userData) => {
     coverImage: coverImageUploaded?.url || "",
   });
 
-  const createUser = await findById(createdUser._id);
+  const findUser = await findById(createdUser._id);
 
-  if(!createUser){
-    throw new ApiError(500,"Something went wrong while registering the user")
+  if (!findUser) {
+    throw new ApiError(500, "Something went wrong while registering the user");
   }
-  
-  return createdUser;
-});
+
+  return findUser;
+};
