@@ -77,18 +77,16 @@ export const createUser = async (userData) => {
 
 export const loginService = async (userData) => {
   const { email, username, password } = userData;
-console.log("s1",{ email, username, password });
-  if (!username || !email) {
+
+  if (!(username || email)) {
     throw new ApiError(400, "Username or Password register");
   }
 
   const existingUser = await findUserByEmailOrUsername(email, username);
-  console.log("p0", { existingUser });
 
   if (!existingUser) {
     throw new ApiError(404, "User does not exist");
   }
-  console.log("s4", { existingUser });
 
   const isPasswordValid = await existingUser.isPasswordCorrect(password);
   
