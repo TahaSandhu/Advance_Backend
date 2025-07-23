@@ -26,9 +26,24 @@ export const updateUser = async (id, user) => {
 };
 
 export const findUserByEmailOrUsername = async (email, username) => {
+  console.log("s2", { email, username });
+  const result = await userModel
+  .findOne({
+    $or: [{ email }, { username }],
+  })
+  .select("+password")
+  .exec();
+  console.log("s3", { result });
+  return result;
+};
+
+export const Logout = async (user) => {
+  const { email, username } = user;
   return userModel
-    .findOne({
-      $or: [{ email }, { username }],
-    })
+    .findOneAndUpdate(
+      { $or: [{ email }, { username }] },
+      { $set: { refreshToken: null } },
+      { new: true }
+    )
     .exec();
 };
