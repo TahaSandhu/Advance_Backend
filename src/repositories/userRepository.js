@@ -6,9 +6,6 @@ export const getUsers = async () => {
 };
 
 export const findById = async (id) => {
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    throw new ApiError(400, "Invalid user ID");
-  }
   return userModel.findById(id).select("-password -refreshToken");
 };
 
@@ -26,14 +23,12 @@ export const updateUser = async (id, user) => {
 };
 
 export const findUserByEmailOrUsername = async (email, username) => {
-  console.log("s2", { email, username });
   const result = await userModel
   .findOne({
     $or: [{ email }, { username }],
   })
   .select("+password")
   .exec();
-  console.log("s3", { result });
   return result;
 };
 

@@ -5,6 +5,7 @@ import {
   findById,
   Logout,
 } from "../repositories/userRepository.js";
+import { generateAccessToken, verifyRefreshToken } from "../middlewares/tokenMiddleware.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import ApiError from "../utils/apiErrors.js";
 
@@ -118,4 +119,22 @@ export const LogoutUserService = async (userId) => {
   const result = await Logout(user);
 
   return {  user: result , options };
+};
+
+export const RefreshAccessTokenService = async (refreshToken) => {
+  const decoded = verifyRefreshToken(refreshToken);
+  const user = await findUserById(decoded.userId);
+
+  if (!user || user.refreshToken !== refreshToken) {
+    throw new ApiError(403, "Invalid refresh token");
+  }
+
+  const newAccessToken = generateAccessToken(user._id);
+
+  const options = {
+    httpOnly: true,
+    secure: true,
+  };
+
+  return { newAccessToken, user, options };
 };
