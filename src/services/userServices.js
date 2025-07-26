@@ -4,6 +4,7 @@ import {
   findUserByEmailOrUsername,
   findById,
   Logout,
+  updateUser,
 } from "../repositories/userRepository.js";
 import { generateAccessToken, verifyRefreshToken } from "../middlewares/tokenMiddleware.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
@@ -51,8 +52,6 @@ export const createUser = async (userData) => {
 
   const avatarImageUploaded = await uploadOnCloudinary(avatar);
   const coverImageUploaded = await uploadOnCloudinary(coverImage);
-
-  console.log("tService", { avatarImageUploaded, coverImageUploaded });
 
   if (!avatarImageUploaded) {
     throw new ApiError(400, "avatar required");
@@ -137,4 +136,75 @@ export const RefreshAccessTokenService = async (refreshToken) => {
   };
 
   return { newAccessToken, user, options };
+};
+
+export const ChangePasswordService = async (userId, newPassword,oldPassword) => {
+  const user = await findById(userId);
+  const isPasswordCorrect = await user.isPasswordCorrect(oldPassword);
+  if (isPasswordCorrect !== true) {
+    throw new ApiError(400, "Invalid old password");
+  }
+  user.password = newPassword;
+  await user.save(
+    { validateBeforeSave: true }
+  );
+
+  return user;
+};
+
+export const updateUserAccountDetailsService = async (userId, updateData) => {
+  if (!(updateData.fullName && updateData.email && updateData.username)) {
+    throw new ApiError(400, "All fields are required");
+  }
+
+  const user = await findById(userId);
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  const existingUser = await findUserByEmailOrUsername(updateData.email, updateData.username, userId);
+  if (existingUser) {
+    throw new ApiError(409, "Email or username already in use.");
+  }
+
+  const updatedUser = await updateUser(userId, {
+    fullName: updateData.fullName,
+    email: updateData.email,
+    username: updateData.username,
+  });
+
+  return updatedUser;
+};
+
+export const UpdateUserAvatarService = async (userId, avatar) => {
+  const user = await findById(userId);
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  const avatarImageUploaded = await uploadOnCloudinary(avatar);
+  if (!avatarImageUploaded) {
+    throw new ApiError(400, "Avatar file is required");
+  }
+
+  const updatedUser = await updateUserAvatar(userId, avatarImageUploaded.url);
+
+  return updatedUser;
+};
+
+
+export const UpdateUserBackgroundService = async (userId, backgroundImage) => {
+  const user = await findById(userId);
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  const uploadedBackgroundImage = await uploadOnCloudinary(backgroundImage);
+  if (!uploadedBackgroundImage) {
+    throw new ApiError(400, "Background image is required");
+  }
+
+  const updatedUser = await updateUserBackground(userId, uploadedBackgroundImage.url);
+
+  return updatedUser;
 };

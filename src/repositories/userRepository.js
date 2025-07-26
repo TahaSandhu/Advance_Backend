@@ -1,4 +1,3 @@
-import mongoose from "mongoose";
 import { userModel } from "../model/userModel.js";
 
 export const getUsers = async () => {
@@ -19,7 +18,23 @@ export const removeUser = async (id) => {
 };
 
 export const updateUser = async (id, user) => {
-  return userModel.findByIdAndUpdate(id, user, { new: true }).exec();
+  return userModel.findByIdAndUpdate(id, {$set: user}, { new: true }).select("-password").exec();
+};
+
+export const updateUserAvatar = async (id, avatarUrl) => {
+  return userModel.findByIdAndUpdate(
+    id,
+    { $set: { avatar: avatarUrl } },
+    { new: true }
+  ).select("-password").exec();
+};
+
+export const updateUserBackground = async (id, backgroundUrl) => {
+  return userModel.findByIdAndUpdate(
+    id,
+    { $set: { background: backgroundUrl } },
+    { new: true }
+  ).select("-password").exec();
 };
 
 export const findUserByEmailOrUsername = async (email, username) => {
@@ -27,7 +42,7 @@ export const findUserByEmailOrUsername = async (email, username) => {
   .findOne({
     $or: [{ email }, { username }],
   })
-  .select("+password")
+  .select("-password")
   .exec();
   return result;
 };

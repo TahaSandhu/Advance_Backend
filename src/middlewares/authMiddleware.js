@@ -1,8 +1,7 @@
-// only verify user is existing or not
 import  jwt  from 'jsonwebtoken';
 import ApiError from '../utils/apiErrors.js';
 
-export const JwttokenMiddleware = async (req, res, next) => {
+export const VerifyUser = async (req, res, next) => {
   const token = req.cookies?.accessToken || req.headers.authorization?.split(" ")[1];
 
   if (!token) {

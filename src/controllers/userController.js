@@ -1,8 +1,12 @@
 import {
+  ChangePasswordService,
   createUser,
   getUserService,
   loginService,
   LogoutUserService,
+  updateUserAccountDetailsService,
+  UpdateUserAvatarService,
+  UpdateUserBackgroundService,
 } from "../services/userServices.js";
 import { ApiResponse } from "../utils/apiResponse.js";
 import asyncHandler from "../utils/asyncHandler.js";
@@ -89,7 +93,7 @@ export const RefreshAccessToken = asyncHandler(async (req, res) => {
   if (!newAccessToken || !newRefreshToken) {
     throw new ApiError(403, "Failed to refresh tokens");
   }
-  
+
   res
     .cookie("accessToken", newAccessToken, options)
     .cookie("refreshToken", newRefreshToken, options)
@@ -101,4 +105,57 @@ export const RefreshAccessToken = asyncHandler(async (req, res) => {
         "Access token refreshed successfully"
       )
     );
+});
+
+export const CurrentPasswordChange = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+  const { oldPassword, newPassword } = req.body;
+
+  await ChangePasswordService(userId, newPassword, oldPassword);
+  
+  res.status(200).json(new ApiResponse(200, {}, "Password changed successfully"));
+});
+
+export const CurrentUser = asyncHandler(async (req, res) => {
+  const user = req.user;
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  res.status(200).json(new ApiResponse(200, user, "Current user fetched successfully"));
+})
+
+export const UpdateUserAccountDetails = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+  const { fullName, email, username } = req.body;
+
+  const updatedUser = await updateUserAccountDetailsService(userId, { fullName, email, username });
+
+  res.status(200).json(new ApiResponse(200, updatedUser, "User account details updated successfully"));
+})
+
+export const UpdateUserAvatar = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+  const avatarLocalPath = req.files?.avatar?.[0]?.path;
+
+  if (!avatarLocalPath) {
+    throw new ApiError(400, "Avatar file is required");
+  }
+
+  const updatedUser = await UpdateUserAvatarService(userId, { avatar: avatarLocalPath });
+
+  res.status(200).json(new ApiResponse(200, updatedUser, "User avatar updated successfully"));
+});
+
+export const UpdateUserBackground = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+  const backgroundLocalPath = req.file?.path;
+
+  if (!backgroundLocalPath) {
+    throw new ApiError(400, "Avatar file is required");
+  }
+
+  const updatedUser = await UpdateUserBackgroundService(userId, { backgroundImage: backgroundLocalPath });
+
+  res.status(200).json(new ApiResponse(200, updatedUser, "User background updated successfully"));
 });
