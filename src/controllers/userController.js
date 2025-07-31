@@ -1,12 +1,12 @@
 import {
-  ChangePasswordService,
   createUser,
-  getUserService,
   loginService,
+  getUserService,
   LogoutUserService,
-  updateUserAccountDetailsService,
+  ChangePasswordService,
   UpdateUserAvatarService,
   UpdateUserBackgroundService,
+  updateUserAccountDetailsService,
 } from "../services/userServices.js";
 import { ApiResponse } from "../utils/apiResponse.js";
 import asyncHandler from "../utils/asyncHandler.js";
