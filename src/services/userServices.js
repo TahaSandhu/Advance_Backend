@@ -5,29 +5,34 @@ import {
   findById,
   Logout,
   updateUser,
+  getUserChannelProfileRepo,
 } from "../repositories/userRepository.js";
-import { generateAccessToken, verifyRefreshToken } from "../middlewares/tokenMiddleware.js";
+import {
+  generateAccessToken,
+  verifyRefreshToken,
+} from "../middlewares/tokenMiddleware.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import ApiError from "../utils/apiErrors.js";
+import { userModel } from "../model/userModel.js";
 
 export const getUserService = async () => {
   const users = await getUsers();
   return users;
 };
 
-const generatingAccessAndRefreshToken = async(userId) => {
+const generatingAccessAndRefreshToken = async (userId) => {
   try {
     const user = await findById(userId);
     const accessToken = user.generateAccessToken();
     const refreshToken = user.generateRefreshToken();
     user.refreshToken = refreshToken;
     // Save the refresh token to the user document reason is required field give error so that why use validateBeforeSave: false
-    await user.save({validateBeforeSave: false}); 
+    await user.save({ validateBeforeSave: false });
     return { accessToken, refreshToken };
   } catch (error) {
     throw new ApiError(500, "Error generating tokens");
   }
-}
+};
 
 export const createUser = async (userData) => {
   const { fullName, email, username, password, avatar, coverImage } = userData;
@@ -89,11 +94,13 @@ export const loginService = async (userData) => {
   }
 
   const isPasswordValid = await existingUser.isPasswordCorrect(password);
-  
+
   if (!isPasswordValid) {
     throw new ApiError(401, "Invalid password");
   }
- const { accessToken, refreshToken } = await generatingAccessAndRefreshToken(existingUser._id)
+  const { accessToken, refreshToken } = await generatingAccessAndRefreshToken(
+    existingUser._id
+  );
   const options = {
     httpOnly: true,
     secure: true,
@@ -111,13 +118,13 @@ export const LogoutUserService = async (userId) => {
   if (!user) {
     throw new ApiError(404, "User not found");
   }
-   const options = {
+  const options = {
     httpOnly: true,
     secure: true,
   };
   const result = await Logout(user);
 
-  return {  user: result , options };
+  return { user: result, options };
 };
 
 export const RefreshAccessTokenService = async (refreshToken) => {
@@ -138,16 +145,18 @@ export const RefreshAccessTokenService = async (refreshToken) => {
   return { newAccessToken, user, options };
 };
 
-export const ChangePasswordService = async (userId, newPassword,oldPassword) => {
+export const ChangePasswordService = async (
+  userId,
+  newPassword,
+  oldPassword
+) => {
   const user = await findById(userId);
   const isPasswordCorrect = await user.isPasswordCorrect(oldPassword);
   if (isPasswordCorrect !== true) {
     throw new ApiError(400, "Invalid old password");
   }
   user.password = newPassword;
-  await user.save(
-    { validateBeforeSave: true }
-  );
+  await user.save({ validateBeforeSave: true });
 
   return user;
 };
@@ -162,7 +171,11 @@ export const updateUserAccountDetailsService = async (userId, updateData) => {
     throw new ApiError(404, "User not found");
   }
 
-  const existingUser = await findUserByEmailOrUsername(updateData.email, updateData.username, userId);
+  const existingUser = await findUserByEmailOrUsername(
+    updateData.email,
+    updateData.username,
+    userId
+  );
   if (existingUser) {
     throw new ApiError(409, "Email or username already in use.");
   }
@@ -192,7 +205,6 @@ export const UpdateUserAvatarService = async (userId, avatar) => {
   return updatedUser;
 };
 
-
 export const UpdateUserBackgroundService = async (userId, backgroundImage) => {
   const user = await findById(userId);
   if (!user) {
@@ -204,7 +216,24 @@ export const UpdateUserBackgroundService = async (userId, backgroundImage) => {
     throw new ApiError(400, "Background image is required");
   }
 
-  const updatedUser = await updateUserBackground(userId, uploadedBackgroundImage.url);
+  const updatedUser = await updateUserBackground(
+    userId,
+    uploadedBackgroundImage.url
+  );
 
   return updatedUser;
+};
+
+export const getUserChanelProfileService = async (username) => {
+  const user = await findUserByEmailOrUsername(username);
+  if (!user?._id) {
+    throw new ApiError(404, "User not found");
+  }
+
+  const channel = await getUserChannelProfileRepo(username, user._id);
+  if (!channel?.length) {
+    throw new ApiError(404, "Channel not found");
+  }
+  console.log("channel:", channel);
+  return channel[0] || null;
 };

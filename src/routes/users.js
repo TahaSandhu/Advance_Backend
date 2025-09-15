@@ -1,5 +1,12 @@
 import { Router } from "express";
-import { registerUser, get, LogoutUser, loginUser, RefreshAccessToken } from "../controllers/userController.js";
+import {
+  registerUser,
+  get,
+  LogoutUser,
+  loginUser,
+  RefreshAccessToken,
+  getUserChanelProfile,
+} from "../controllers/userController.js";
 import { upload } from "../middlewares/uploadImageMiddle.js";
 import { VerifyUser } from "../middlewares/authMiddleware.js";
 
@@ -17,7 +24,8 @@ router.post(
 );
 
 // secure routes
-router.post("/logout", VerifyUser,LogoutUser);
-router.post("/refresh-token", VerifyUser,RefreshAccessToken);
+router.post("/logout", VerifyUser, LogoutUser);
+router.get("/chanel-profile/:username", VerifyUser, getUserChanelProfile);
+router.post("/refresh-token", VerifyUser, RefreshAccessToken);
 
 export default router;

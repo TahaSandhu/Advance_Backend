@@ -7,6 +7,7 @@ import {
   UpdateUserAvatarService,
   UpdateUserBackgroundService,
   updateUserAccountDetailsService,
+  getUserChanelProfileService,
 } from "../services/userServices.js";
 import { ApiResponse } from "../utils/apiResponse.js";
 import asyncHandler from "../utils/asyncHandler.js";
@@ -50,7 +51,10 @@ export const loginUser = asyncHandler(async (req, res) => {
     username,
     password,
   };
-
+console.log("userData:", userData);
+  if (!email && !username) {
+    throw new ApiError(400, "Email or username is required");
+  }
   const user = await loginService(userData);
 
   res
@@ -158,4 +162,11 @@ export const UpdateUserBackground = asyncHandler(async (req, res) => {
   const updatedUser = await UpdateUserBackgroundService(userId, { backgroundImage: backgroundLocalPath });
 
   res.status(200).json(new ApiResponse(200, updatedUser, "User background updated successfully"));
+});
+
+export const  getUserChanelProfile = asyncHandler(async (req, res) => {
+  const { username } = req.params;    
+  const user = await getUserChanelProfileService(username);
+
+  res.status(200).json(new ApiResponse(200, user, "User chanel profile fetched successfully"));
 });
